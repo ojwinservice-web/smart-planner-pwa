@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Smart Planner</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1C1B1F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #1C1B1F;
+      --glass: rgba(255,255,255,.13);
+      --border: rgba(255,255,255,.16);
+      --text: #F3EFF7;
+      --muted: rgba(255,255,255,.72);
+      --purple: #D0BCFF;
+      --cyan: #80D8FF;
+      --amber: #FFB74D;
+      --red: #FF8A80;
+      --yellow: #FFD180;
+      --green: #A7F3D0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 95px;
+    }
+
+    .bg {
+      position: fixed;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: .35;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .bg1 {
+      top: -80px;
+      right: -80px;
+      background: #4F378B;
+    }
+
+    .bg2 {
+      bottom: -100px;
+      left: -80px;
+      background: #381E72;
+    }
+
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 20px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      margin: 12px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .topbar p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .datebar {
+      margin: 0 12px 12px;
+      padding: 12px;
+    }
+
+    .date-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    #monthLabel {
+      font-weight: 700;
+    }
+
+    .icon-btn,
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.14);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: rgba(208,188,255,.24);
+      color: var(--purple);
+    }
+
+    .btn.danger {
+      background: rgba(255,138,128,.18);
+      color: var(--red);
+    }
+
+    .pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .pill {
+      min-width: 62px;
+      padding: 10px 8px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      cursor: pointer;
+    }
+
+    .pill small {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .pill.active {
+      background: rgba(208,188,255,.24);
+      border-color: rgba(208,188,255,.35);
+    }
+
+    main {
+      padding: 0 12px;
+    }
+
+    .tab {
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    .card {
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .task,
+    .habit {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.08);
+      margin-bottom: 8px;
+    }
+
+    .task-body {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 15px;
+    }
+
+    .task-title.done {
+      text-decoration: line-through;
+      opacity: .75;
+    }
+
+    .task-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow: auto;
+      padding-bottom: 6px;
+      margin: 10px 0;
+    }
+
+    .chip {
+      white-space: nowrap;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .chip.active {
+      background: rgba(208,188,255,.24);
+    }
+
+    .bottombar {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      z-index: 30;
+    }
+
+    .nav-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      padding: 8px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      color: var(--text);
+      background: rgba(255,255,255,.10);
+    }
+
+    .nav-btn span {
+      font-size: 20px;
+    }
+
+    .ring-wrap {
+      display: grid;
+      place-items: center;
+      margin: 10px auto;
+    }
+
+    .ring {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+      background: conic-gradient(var(--purple) 0deg, rgba(255,255,255,.12) 0deg);
+    }
+
+    .ring::before {
+      content: '';
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      background: rgba(28,27,31,.95);
+    }
+
+    .ring strong {
+      position: relative;
+      z-index: 1;
+      font-size: 28px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .progress {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress > div {
+      height: 100%;
+      background: var(--cyan);
+      width: 0%;
+    }
+
+    .small {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg bg1"></div>
+  <div class="bg bg2"></div>
+
+  <header class="topbar glass">
+    <div>
+      <h1>برنامه‌ریز هوشمند و ردگیر سلامت</h1>
+      <p id="todayLabel" class="muted"></p>
+    </div>
+    <button id="installBtn" class="btn primary hidden">نصب اپ</button>
+  </header>
+
+  <section class="datebar glass">
+    <div class="date-head">
+      <button id="prevDay" class="icon-btn" aria-label="روز قبل">قبلی</button>
+      <div id="monthLabel"></div>
+      <button id="nextDay" class="icon-btn" aria-label="روز بعد">بعدی</button>
+    </div>
+    <div id="datePills" class="pills"></div>
+  </section>
+
+  <main>
+    <!-- Dashboard -->
+    <section id="tab-dashboard" class="tab active">
+      <div class="card glass">
+        <p id="tipBanner" style="margin:0;"></p>
+      </div>
+
+      <div class="card glass">
+        <div class="row">
+          <div>
+            <h2 style="margin:0;">شاخص زندگی امروز</h2>
+            <p class="muted small" style="margin:6px 0 0;">ترکیب کارها، آب و عادت‌ها</p>
+          </div>
+        </div>
+
+        <div class="ring-wrap">
+          <div class="ring" id="scoreRing">
+            <strong id="scoreText">0%</strong>
+          </div>
+        </div>
+
+        <div id="scoreDetails" class="muted small" style="text-align:center;"></div>
+      </div>
+
+      <div class="card glass">
+        <div class="row">
+          <h2 style="margin:0;">کارهای امروز</h2>
+          <button class="btn" data-gotab="tasks">افزودن</button>
+        </div>
+        <div id="dashTasks" style="margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <!-- Tasks -->
+    <section id="tab-tasks" class="tab">
+      <div class="card glass">
+        <h2 style="margin-top:0;">کارها</h2>
+
+        <form id="taskForm" class="form-grid">
+          <input id="taskTitle" placeholder="عنوان کار" required>
+
+          <select id="taskCategory">
+            <option value="work">کار</option>
+            <option value="personal">شخصی</option>
+            <option value="health">سلامت</option>
+            <option value="study">مطالعه</option>
+            <option value="finance">مالی</option>
+          </select>
+
+          <select id="taskPriority">
+            <option value="low">اولویت کم</option>
+            <option value="medium">اولویت متوسط</option>
+            <option value="high">اولویت زیاد</option>
+          </select>
+
+          <button class="btn primary" type="submit">افزودن کار</button>
+        </form>
+      </div>
+
+      <div class="card glass">
+        <input id="taskSearch" placeholder="جستجو...">
+
+        <div class="chips" id="filterChips">
+          <button class="chip active" data-filter="all">همه</button>
+          <button class="chip" data-filter="active">فعال</button>
+          <button class="chip" data-filter="done">انجام شده</button>
+        </div>
+
+        <div id="taskList"></div>
+      </div>
+    </section>
+
+    <!-- Health -->
+    <section id="tab-health" class="tab">
+      <div class="card glass">
+        <h2 style="margin-top:0;">آب امروز</h2>
+
+        <div class="row">
+          <strong id="waterText">0 ml</strong>
+          <span id="waterGoalText" class="muted small"></span>
+        </div>
+
+        <div class="progress">
+          <div id="waterProgress"></div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="water250">+250</button>
+          <button class="btn" id="water500">+500</button>
+          <button class="btn" id="waterMinus">-250</button>
+        </div>
+      </div>
+
+      <div class="card glass">
+        <h2 style="margin-top:0;">عادت‌ها</h2>
+        <div id="habitList"></div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" class="tab">
+      <div class="card glass">
+        <h2 style="margin-top:0;">تنظیمات</h2>
+
+        <label class="muted small" for="waterGoalInput">هدف آب روزانه (میلی‌لیتر)</label>
+        <input id="waterGoalInput" type="number" min="0" step="50" style="margin-top:8px;">
+
+        <button id="saveSettings" class="btn primary" style="margin-top:10px;">ذخیره</button>
+      </div>
+
+      <div class="card glass">
+        <h2 style="margin-top:0;">داده‌ها</h2>
+
+        <div class="row">
+          <button id="exportBtn" class="btn">خروجی JSON</button>
+          <button id="resetBtn" class="btn danger">پاک کردن همه داده‌ها</button>
+        </div>
+
+        <p class="muted small" style="margin-bottom:0;">
+          داده‌ها فقط روی همین گوشی / مرورگر ذخیره می‌شوند.
+        </p>
+      </div>
+
+      <div class="card glass">
+        <h2 style="margin-top:0;">نسخه</h2>
+        <p class="muted small" style="margin-bottom:0;">0.1.0 PWA</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottombar glass">
+    <button class="nav-btn active" data-tab="dashboard"><span>🏠</span>خانه</button>
+    <button class="nav-btn" data-tab="tasks"><span>✅</span>کارها</button>
+    <button class="nav-btn" data-tab="health"><span>💧</span>سلامت</button>
+    <button class="nav-btn" data-tab="settings"><span>⚙️</span>تنظیمات</button>
+  </nav>
+
+  <script>
+    const APP_KEY = 'smart-planner-pwa-v1';
+
+    const HABITS = [
+      { id: 'exercise', label: 'ورزش' },
+      { id: 'meditation', label: 'مدیتیشن' },
+      { id: 'reading', label: 'مطالعه' },
+      { id: 'vitamins', label: 'ویتامین' },
+      { id: 'skincare', label: 'مراقبت پوست' }
+    ];
+
+    const CATEGORIES = {
+      work: 'کار',
+      personal: 'شخصی',
+      health: 'سلامت',
+      study: 'مطالعه',
+      finance: 'مالی'
+    };
+
+    const PRIORITIES = {
+      low: 'کم',
+      medium: 'متوسط',
+      high: 'زیاد'
+    };
+
+    let state = loadState();
+    let selectedDate = startOfDay(new Date());
+    let taskFilter = 'all';
+    let taskSearch = '';
+    let deferredPrompt = null;
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function defaultState() {
+      return {
+        settings: {
+          waterGoal: 2000
+        },
+        tasks: [],
+        water: {},
+        habits: {}
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(APP_KEY);
+        if (!raw) return defaultState();
+
+        const parsed = JSON.parse(raw);
+
+        return {
+          settings: {
+            waterGoal: 2000,
+            ...(parsed.settings || {})
+          },
+          tasks: parsed.tasks || [],
+          water: parsed.water || {},
+          habits: parsed.habits || {}
+        };
+      } catch (e) {
+        return defaultState();
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(APP_KEY, JSON.stringify(state));
+    }
+
+    function startOfDay(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function addDays(date, days) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+
+    let keyFormatter;
+
+    try {
+      keyFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-latn', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } catch (e) {
+      keyFormatter = new Intl.DateTimeFormat('fa-IR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+
+    function getJalaliParts(date) {
+      const parts = keyFormatter.formatToParts(date);
+      const obj = {};
+
+      parts.forEach(part => {
+        obj[part.type] = part.value;
+      });
+
+      return {
+        year: obj.year || obj.relatedYear || '',
+        month: obj.month || '',
+        day: obj.day || ''
+      };
+    }
+
+    function getDateKey(date) {
+      const p = getJalaliParts(date);
+      return `${p.year}/${p.month}/${p.day}`;
+    }
+
+    function getFullLabel(date) {
+      try {
+        return new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-latn', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).format(date);
+      } catch (e) {
+        return date.toLocaleDateString('fa-IR');
+      }
+    }
+
+    function getMonthLabel(date) {
+      try {
+        return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+          month: 'long',
+          year: 'numeric'
+        }).format(date);
+      } catch (e) {
+        return date.toLocaleDateString('fa-IR', {
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+    }
+
+    function getWeekday(date) {
+      try {
+        return new Intl.DateTimeFormat('fa-IR', {
+          weekday: 'short'
+        }).format(date);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function getDayNumber(date) {
+      try {
+        return new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-latn', {
+          day: 'numeric'
+        }).format(date);
+      } catch (e) {
+        return String(date.getDate());
+      }
+    }
+
+    function sameDay(a, b) {
+      return getDateKey(a) === getDateKey(b);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function priorityColor(priority) {
+      if (priority === 'high') return 'var(--red)';
+      if (priority === 'medium') return 'var(--yellow)';
+      return 'var(--green)';
+    }
+
+    function categoryLabel(value) {
+      return CATEGORIES[value] || value;
+    }
+
+    function priorityLabel(value) {
+      return PRIORITIES[value] || value;
+    }
+
+    function renderAll() {
+      renderDateBar();
+      renderDashboard();
+      renderTasks();
+      renderHealth();
+      renderSettings();
+    }
+
+    function renderDateBar() {
+      const datePills = $('datePills');
+      datePills.innerHTML = '';
+
+      for (let i = -3; i <= 3; i++) {
+        const d = addDays(selectedDate, i);
+
+        const btn = document.createElement('button');
+        btn.className = 'pill' + (sameDay(d, selectedDate) ? ' active' : '');
+        btn.innerHTML = `
+          <small>${escapeHtml(getWeekday(d))}</small>
+          <strong>${escapeHtml(getDayNumber(d))}</strong>
+        `;
+
+        btn.addEventListener('click', () => {
+          selectedDate = startOfDay(d);
+          renderAll();
+        });
+
+        datePills.appendChild(btn);
+      }
+
+      $('monthLabel').textContent = getMonthLabel(selectedDate);
+      $('todayLabel').textContent = getFullLabel(selectedDate);
+    }
+
+    function tipText() {
+      const key = getDateKey(selectedDate);
+      const tasks = state.tasks.filter(t => t.dateKey === key);
+      const done = tasks.filter(t => t.done).length;
+      const water = state.water[key] || 0;
+      const goal = state.settings.waterGoal || 0;
+
+      if (tasks.length === 0 && water < goal / 2) {
+        return 'امروز یک کار کوچک اضافه کن و یک لیوان آب بنوش.';
+      }
+
+      if (tasks.length === 0) {
+        return 'برای شروع، یک کار کوچک برای امروز ثبت کن.';
+      }
+
+      if (done === tasks.length) {
+        return 'همه کارها انجام شده؛ آفرین!';
+      }
+
+      if (water < goal / 2) {
+        return 'هنوز آب کافی نخوردی؛ یک لیوان آب اضافه کن.';
+      }
+
+      return 'وضعیت امروز خوب است؛ ادامه بده.';
+    }
+
+    function renderDashboard() {
+      const key = getDateKey(selectedDate);
+
+      const tasks = state.tasks.filter(t => t.dateKey === key);
+      const done = tasks.filter(t => t.done).length;
+
+      const tasksScore = tasks.length ? done / tasks.length : 0;
+
+      const water = state.water[key] || 0;
+      const goal = state.settings.waterGoal || 0;
+      const waterScore = goal ? Math.min(water / goal, 1) : 0;
+
+      const habitsObj = state.habits[key] || {};
+      const habitsDone = HABITS.filter(h => habitsObj[h.id]).length;
+      const habitsScore = HABITS.length ? habitsDone / HABITS.length : 0;
+
+      const score = Math.round(
+        (tasksScore * 0.45 + waterScore * 0.35 + habitsScore * 0.20) * 100
+      );
+
+      $('scoreText').textContent = score + '%';
+      $('scoreRing').style.background =
+        `conic-gradient(var(--purple) ${score * 3.6}deg, rgba(255,255,255,.12) 0deg)`;
+
+      $('scoreDetails').textContent =
+        `کارها: ${done}/${tasks.length} • آب: ${water}/${goal} ml • عادت‌ها: ${habitsDone}/${HABITS.length}`;
+
+      $('tipBanner').textContent = tipText();
+
+      renderDashTasks();
+    }
+
+    function taskItemHtml(task) {
+      return `
+        <input type="checkbox" class="toggle" data-id="${task.id}" ${task.done ? 'checked' : ''}>
+        <div class="task-body">
+          <div class="task-title ${task.done ? 'done' : ''}">${escapeHtml(task.title)}</div>
+          <div class="task-meta">
+            <span style="color:${priorityColor(task.priority)}">●</span>
+            ${escapeHtml(categoryLabel(task.category))}
+            •
+            ${escapeHtml(priorityLabel(task.priority))}
+          </div>
+        </div>
+        <button class="icon-btn delete" data-id="${task.id}">✕</button>
+      `;
+    }
+
+    function renderDashTasks() {
+      const key = getDateKey(selectedDate);
+      const tasks = state.tasks.filter(t => t.dateKey === key);
+      const el = $('dashTasks');
+
+      el.innerHTML = '';
+
+      if (!tasks.length) {
+        el.innerHTML = '<p class="muted">برای امروز کاری ثبت نشده.</p>';
+        return;
+      }
+
+      tasks.forEach(task => {
+        const div = document.createElement('div');
+        div.className = 'task';
+        div.innerHTML = taskItemHtml(task);
+        el.appendChild(div);
+      });
+    }
+
+    function renderTasks() {
+      const key = getDateKey(selectedDate);
+
+      let tasks = state.tasks.filter(t => t.dateKey === key);
+
+      if (taskFilter === 'active') {
+        tasks = tasks.filter(t => !t.done);
+      }
+
+      if (taskFilter === 'done') {
+        tasks = tasks.filter(t => t.done);
+      }
+
+      if (taskSearch.trim()) {
+        const q = taskSearch.trim().toLowerCase();
+        tasks = tasks.filter(t => t.title.toLowerCase().includes(q));
+      }
+
+      tasks.sort((a, b) => {
+        if (a.done === b.done) return 0;
+        return a.done ? 1 : -1;
+      });
+
+      const el = $('taskList');
+      el.innerHTML = '';
+
+      if (!tasks.length) {
+        el.innerHTML = '<p class="muted">کاری یافت نشد.</p>';
+        return;
+      }
+
+      tasks.forEach(task => {
+        const div = document.createElement('div');
+        div.className = 'task';
+        div.innerHTML = taskItemHtml(task);
+        el.appendChild(div);
+      });
+    }
+
+    function getWater() {
+      const key = getDateKey(selectedDate);
+      return state.water[key] || 0;
+    }
+
+    function addWater(amount) {
+      const key = getDateKey(selectedDate);
+      state.water[key] = Math.max(0, (state.water[key] || 0) + amount);
+      saveState();
+      renderAll();
+    }
+
+    function renderHealth() {
+      const key = getDateKey(selectedDate);
+      const water = state.water[key] || 0;
+      const goal = state.settings.waterGoal || 0;
+
+      $('waterText').textContent = water + ' ml';
+      $('waterGoalText').textContent = 'هدف: ' + goal + ' ml';
+
+      const percent = goal ? Math.min(100, Math.round((water / goal) * 100)) : 0;
+      $('waterProgress').style.width = percent + '%';
+
+      const habitList = $('habitList');
+      habitList.innerHTML = '';
+
+      const habitsObj = state.habits[key] || {};
+
+      HABITS.forEach(habit => {
+        const label = document.createElement('label');
+        label.className = 'habit';
+        label.innerHTML = `
+          <input type="checkbox" data-habit="${habit.id}" ${habitsObj[habit.id] ? 'checked' : ''}>
+          <div>${escapeHtml(habit.label)}</div>
+        `;
+        habitList.appendChild(label);
+      });
+    }
+
+    function renderSettings() {
+      $('waterGoalInput').value = state.settings.waterGoal || 0;
+    }
+
+    function handleTaskToggle(event) {
+      if (!event.target.classList.contains('toggle')) return;
+
+      const id = event.target.dataset.id;
+      const task = state.tasks.find(t => t.id === id);
+
+      if (!task) return;
+
+      task.done = event.target.checked;
+      saveState();
+      renderAll();
+    }
+
+    function handleTaskDelete(event) {
+      const btn = event.target.closest('button.delete');
+      if (!btn) return;
+
+      state.tasks = state.tasks.filter(t => t.id !== btn.dataset.id);
+      saveState();
+      renderAll();
+    }
+
+    $('prevDay').addEventListener('click', () => {
+      selectedDate = addDays(selectedDate, -1);
+      renderAll();
+    });
+
+    $('nextDay').addEventListener('click', () => {
+      selectedDate = addDays(selectedDate, 1);
+      renderAll();
+    });
+
+    $('taskForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const title = $('taskTitle').value.trim();
+      if (!title) return;
+
+      state.tasks.push({
+        id: String(Date.now()),
+        dateKey: getDateKey(selectedDate),
+        title,
+        category: $('taskCategory').value,
+        priority: $('taskPriority').value,
+        done: false
+      });
+
+      saveState();
+      event.target.reset();
+      renderAll();
+    });
+
+    $('taskSearch').addEventListener('input', (event) => {
+      taskSearch = event.target.value;
+      renderTasks();
+    });
+
+    document.querySelectorAll('#filterChips .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        taskFilter = chip.dataset.filter;
+
+        document.querySelectorAll('#filterChips .chip').forEach(c => {
+          c.classList.toggle('active', c === chip);
+        });
+
+        renderTasks();
+      });
+    });
+
+    $('water250').addEventListener('click', () => addWater(250));
+    $('water500').addEventListener('click', () => addWater(500));
+    $('waterMinus').addEventListener('click', () => addWater(-250));
+
+    $('habitList').addEventListener('change', (event) => {
+      const habitId = event.target.dataset.habit;
+      if (!habitId) return;
+
+      const key = getDateKey(selectedDate);
+
+      if (!state.habits[key]) {
+        state.habits[key] = {};
+      }
+
+      state.habits[key][habitId] = event.target.checked;
+
+      saveState();
+      renderDashboard();
+    });
+
+    $('taskList').addEventListener('change', handleTaskToggle);
+    $('dashTasks').addEventListener('change', handleTaskToggle);
+
+    $('taskList').addEventListener('click', handleTaskDelete);
+    $('dashTasks').addEventListener('click', handleTaskDelete);
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+
+        document.querySelectorAll('.tab').forEach(section => {
+          section.classList.remove('active');
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(item => {
+          item.classList.remove('active');
+        });
+
+        $('tab-' + tab).classList.add('active');
+        btn.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('[data-gotab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.gotab;
+
+        document.querySelectorAll('.tab').forEach(section => {
+          section.classList.remove('active');
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.tab === tab) item.classList.add('active');
+        });
+
+        $('tab-' + tab).classList.add('active');
+      });
+    });
+
+    $('saveSettings').addEventListener('click', () => {
+      const value = parseInt($('waterGoalInput').value, 10);
+      state.settings.waterGoal = isNaN(value) || value < 0 ? 0 : value;
+      saveState();
+      renderAll();
+    });
+
+    $('exportBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], {
+        type: 'application/json'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'smart-planner-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    $('resetBtn').addEventListener('click', () => {
+      if (confirm('همه داده‌ها پاک شوند؟')) {
+        localStorage.removeItem(APP_KEY);
+        state = defaultState();
+        saveState();
+        renderAll();
+      }
+    });
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      $('installBtn').classList.remove('hidden');
+    });
+
+    $('installBtn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+
+      deferredPrompt = null;
+      $('installBtn').classList.add('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      $('installBtn').classList.add('hidden');
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
